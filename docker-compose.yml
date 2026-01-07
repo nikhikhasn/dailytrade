@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: dailytrade_db
+    environment:
+      POSTGRES_USER: dailytrade
+      POSTGRES_PASSWORD: dailytrade
+      POSTGRES_DB: dailytrade
+    ports:
+      - "5432:5432"
+    volumes:
+      - dailytrade_pgdata:/var/lib/postgresql/data
+
+volumes:
+  dailytrade_pgdata:
