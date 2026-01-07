@@ -1,34 +1,39 @@
+import pandas as pd
 from datetime import date, timedelta
 
-from app.db.engine import init_engine
-from app.db.session import SessionLocal
-from app.db.models import MinuteBar
 from app.data.mock_data import generate_mock_day
 
 
-def main():
-    # 🔹 IMPORTANT: bind SessionLocal to the engine
-    init_engine()
+def load_mock_minute_bars(
+    ticker: str = "AAPL",
+    start_date: date = date(2024, 1, 2),
+    num_days: int = 5,
+):
+    """
+    Load mock intraday minute bars for multiple trading days.
+    Uses generate_mock_day from app.data.mock_data.
+    """
 
-    tickers = ["F", "SOFI", "PLTR"]
-    start_date = date.today() - timedelta(days=5)
+    all_rows = []
 
-    db = SessionLocal()
-    try:
-        for d in range(5):
-            trading_date = start_date + timedelta(days=d)
-            for ticker in tickers:
-                rows = generate_mock_day(ticker, trading_date)
+    current_date = start_date
+    days_generated = 0
 
-                for r in rows:
-                    db.merge(MinuteBar(**r))
+    while days_generated < num_days:
+        # Skip weekends
+        if current_date.weekday() < 5:
+            day_rows = generate_mock_day(ticker, current_date)
+            all_rows.extend(day_rows)
+            days_generated += 1
 
-            print(f"Inserted mock data for {trading_date}")
+        current_date += timedelta(days=1)
 
-        db.commit()
-    finally:
-        db.close()
+    df = pd.DataFrame(all_rows)
 
+    # Align column names with backtest engine
+    df = df.rename(columns={"ts": "timestamp"})
 
-if __name__ == "__main__":
-    main()
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.sort_values("timestamp").reset_index(drop=True)
+
+    return df
