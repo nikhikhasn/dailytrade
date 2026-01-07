@@ -1,33 +1,16 @@
+import os
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from pathlib import Path
-import os
 
-from app.db.session import SessionLocal
+load_dotenv()
 
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-def init_engine():
-    # Find repo root explicitly
-    engine_file = Path(__file__).resolve()
-    repo_root = engine_file.parents[2]  # dailytrade/
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required")
 
-    env_path = repo_root / ".env"
-
-    print(f"🔍 Loading .env from: {env_path}")
-
-    if not env_path.exists():
-        raise RuntimeError(f".env file not found at {env_path}")
-
-    load_dotenv(env_path)
-
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise RuntimeError("DATABASE_URL is required at application runtime")
-
-    engine = create_engine(
-        database_url,
-        pool_pre_ping=True,
-    )
-
-    SessionLocal.configure(bind=engine)
-    return engine
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    future=True,
+)

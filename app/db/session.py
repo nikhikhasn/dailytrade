@@ -1,11 +1,14 @@
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from app.db.engine import engine
 
-# IMPORTANT:
-# This file must NOT create an engine at import time.
-# Alembic only needs Base.metadata.
 
 class Base(DeclarativeBase):
     pass
 
-# SessionLocal will be bound later at runtime (not during import)
-SessionLocal = sessionmaker()
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    future=True,
+)
