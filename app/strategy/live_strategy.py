@@ -1,21 +1,20 @@
-from collections import deque
-
+from datetime import datetime
 
 class SimpleMomentumStrategy:
-    def __init__(self, window=5):
-        self.prices = deque(maxlen=window)
+    def __init__(self, daily_gate):
+        self.daily_gate = daily_gate
+        self.last_signal = None
 
-    def update(self, price):
-        self.prices.append(price)
+    def on_trade(self, trade, broker):
+        now = datetime.fromtimestamp(trade.timestamp.timestamp())
+        window = self.daily_gate.get_active_window(now)
 
-        if len(self.prices) < self.prices.maxlen:
-            return "HOLD"
+        if not window or window == self.last_signal:
+            return
 
-        avg_price = sum(self.prices) / len(self.prices)
+        if window == "BUY":
+            print("🟢 BUY WINDOW ACTIVE")
+        elif window == "SELL":
+            print("🔴 SELL WINDOW ACTIVE")
 
-        if price > avg_price:
-            return "BUY"
-        elif price < avg_price:
-            return "SELL"
-        else:
-            return "HOLD"
+        self.last_signal = window
